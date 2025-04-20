@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Set base styles for body */
+body {
+  font-family: 'Inter', sans-serif;
+  @apply bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-700 text-white;
+  @apply transition-colors duration-300 ease-in-out;
+  @apply min-h-screen;
+}
+
+/* Enhance buttons with smooth transitions */
+button {
+  @apply transition duration-200 ease-in-out;
+}
+
+/* Reusable utility: fade-in animation */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+/* Optional: glass effect for cards or feature boxes */
+.glass {
+  @apply backdrop-blur-md bg-white/10 border border-white/20 rounded-xl shadow-lg;
+}
+
+/* Optional: improve scroll smoothness */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Heading animations */
+.animate-header {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+/* Custom scrollbar (optional for polish) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
