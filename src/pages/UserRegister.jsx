@@ -1,14 +1,11 @@
-import React, { useState } from "react";
-import { ethers } from "ethers";
+import React, { useState, useContext } from "react";
+import { WalletContext } from "../context/WalletContext";
 import { useNavigate } from "react-router-dom";
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from "../contractConfig";
-const provider = new ethers.BrowserProvider(window.ethereum);
 
-const signer = provider.getSigner();
-const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 const UserRegister = () => {
   const [fullName, setFullName] = useState("");
   const [message, setMessage] = useState("");
+  const { contract, account, connectWallet } = useContext(WalletContext);
   const navigate = useNavigate();
 
   const handleRegister = async () => {
@@ -23,17 +20,16 @@ const UserRegister = () => {
         return;
       }
 
-      // Connect to wallet
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      if (!contract) {
+        alert("Smart contract not loaded. Please connect your wallet first.");
+        return;
+      }
 
-      const tx = await contract.registerUser(fullName); // fullName = "Sayali"
+      // Register the user via contract
+      const tx = await contract.registerUser(fullName);
       await tx.wait();
 
-      const walletAddress = await signer.getAddress();
-      localStorage.setItem("user", JSON.stringify({ name: fullName, wallet: walletAddress }));
+      localStorage.setItem("user", JSON.stringify({ name: fullName, wallet: account }));
       setMessage("✅ Registration successful!");
       navigate("/UserPanel");
 
@@ -60,8 +56,20 @@ const UserRegister = () => {
           />
 
           <button
+            onClick={connectWallet}
+            className="bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 transition-all font-semibold"
+          >
+            {account ? "✅ Wallet Connected" : "Connect Wallet"}
+          </button>
+
+          <button
             onClick={handleRegister}
-            className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all font-semibold"
+            disabled={!account}
+            className={`py-3 rounded-lg font-semibold transition-all ${
+              account
+                ? "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            }`}
           >
             Register as User
           </button>

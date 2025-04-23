@@ -140,4 +140,4 @@ contract LoyaltyPointExchange {
     }
 
     receive() external payable {}
-}
+} 

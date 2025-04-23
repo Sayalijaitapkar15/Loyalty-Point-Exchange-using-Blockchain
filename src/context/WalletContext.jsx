@@ -1,45 +1,63 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { BrowserProvider } from "ethers";
+// src/context/WalletContext.jsx
+import React, { createContext, useState, useEffect } from "react";
+import { ethers } from "ethers";
+import LoyaltyPointExchangeJSON  from "../../build/contracts/LoyaltyPointExchange.json";
 
 export const WalletContext = createContext();
 
-export const useWallet = () => useContext(WalletContext);
-
 export const WalletProvider = ({ children }) => {
-  const [walletAddress, setWalletAddress] = useState(null);
-  const [provider, setProvider] = useState(null);
-
-  useEffect(() => {
-    const checkIfWalletIsConnected = async () => {
-      if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: "eth_accounts" });
-        if (accounts.length > 0) {
-          setWalletAddress(accounts[0]);
-          const browserProvider = new BrowserProvider(window.ethereum);
-          setProvider(browserProvider);
-        }
-      }
-    };
-    checkIfWalletIsConnected();
-  }, []);
+  const [account, setAccount]     = useState(null);
+  const [signer, setSigner]       = useState(null);
+  const [contract, setContract]   = useState(null);
 
   const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-        setWalletAddress(accounts[0]);
-        const browserProvider = new BrowserProvider(window.ethereum);
-        setProvider(browserProvider);
-      } catch (err) {
-        console.error("Wallet connection failed", err);
+    try {
+      if (!window.ethereum) {
+        alert("🦊 Please install MetaMask!");
+        return;
       }
-    } else {
-      alert("Please install MetaMask!");
+
+      // Ask user to connect their wallet
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+
+      // Create a provider that works on any network (disables ENS errors)
+      const provider = new ethers.BrowserProvider(window.ethereum, "any");
+
+      // Get the signer (the connected account)
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+
+      // Instantiate your contract with just the ABI array
+      const contract = new ethers.Contract(
+        "0x2c4b11c38793a8992D1a42044258e33C939A6A6e",
+        LoyaltyPointExchangeJSON.abi,
+        signer
+      );
+
+      // Save everything in state
+      setAccount(address);
+      setSigner(signer);
+      setContract(contract);
+
+    } catch (error) {
+      console.error("🔌 Wallet connection failed:", error);
     }
   };
 
+  // Listen for account or network changes
+  useEffect(() => {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        setAccount(accounts[0] || null);
+      });
+      window.ethereum.on("chainChanged", () => {
+        window.location.reload();
+      });
+    }
+  }, []);
+
   return (
-    <WalletContext.Provider value={{ walletAddress, provider, connectWallet }}>
+    <WalletContext.Provider value={{ account, signer, contract, connectWallet }}>
       {children}
     </WalletContext.Provider>
   );

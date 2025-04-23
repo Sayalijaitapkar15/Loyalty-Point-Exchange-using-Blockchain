@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { useNavigate } from "react-router-dom";
 
 const UserPanel = ({ contract }) => {
   const [userData, setUserData] = useState({});
   const [points, setPoints] = useState(0);
   const [history, setHistory] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUserData = () => {
       const user = JSON.parse(localStorage.getItem("user"));
       if (user) {
         setUserData(user);
-        setPoints(user.points || 100);
-        setHistory([
-          { action: "Earned", amount: 50, source: "Coffee Shop" },
-          { action: "Spent", amount: 20, item: "T-Shirt" },
-        ]);
+        setPoints(0);
+        setHistory([]);
       }
     };
 
@@ -54,14 +53,14 @@ const UserPanel = ({ contract }) => {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const tx = await contract.connect(signer).buyItemWithEther(item.id, {
-        value: item.etherCost,
+        value: ethers.parseEther(item.etherCost),
       });
       await tx.wait();
 
       alert(`🪙 You bought "${item.name}" with Ether!`);
       setHistory((prev) => [
         ...prev,
-        { action: "Spent (ETH)", amount: ethers.formatEther(item.etherCost), item: item.name },
+        { action: "Spent (ETH)", amount: item.etherCost, item: item.name },
       ]);
     } catch (err) {
       console.error(err);
@@ -76,9 +75,11 @@ const UserPanel = ({ contract }) => {
       const tx = await contract.connect(signer).buyItemWithPoints(item.id);
       const receipt = await tx.wait();
 
-      setPoints((prev) => prev - item.pointCost + item.rewardPoints);
-      alert(`✅ You bought "${item.name}" with points! Earned ${item.rewardPoints} bonus points.`);
+      // Update points after purchase
+      const newPoints = await contract.getLoyaltyPoints(signer.getAddress());
+      setPoints(newPoints);
 
+      alert(`✅ You bought "${item.name}" with points! Earned ${item.rewardPoints} bonus points.`);
       setHistory((prev) => [
         ...prev,
         { action: "Spent", amount: item.pointCost, item: item.name },
@@ -88,6 +89,14 @@ const UserPanel = ({ contract }) => {
       console.error(err);
       alert("Transaction failed.");
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUserData({});
+    setPoints(0);
+    setHistory([]);
+    navigate("/login");
   };
 
   return (
@@ -153,6 +162,14 @@ const UserPanel = ({ contract }) => {
             </li>
           ))}
         </ul>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="mt-6 bg-red-500 text-white px-6 py-2 rounded-xl hover:bg-red-600"
+        >
+          Logout
+        </button>
       </div>
     </div>
   );

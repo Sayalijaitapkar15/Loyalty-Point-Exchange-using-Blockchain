@@ -18,38 +18,38 @@ function App() {
       <Router>
         <Layout>
           <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/register/user" element={<UserRegister />} />
-          <Route path="/register/merchant" element={<MerchantRegister />} />
-          <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/register/user" element={<UserRegister />} />
+            <Route path="/register/merchant" element={<MerchantRegister />} />
+            <Route path="/login" element={<Login />} />
 
-          <Route
-            path="/owner"
-            element={
-              <ProtectedRoute>
-                <OwnerPanel />
-              </ProtectedRoute>
-            }
+            <Route
+              path="/OwnerPanel"
+              element={
+                <ProtectedRoute>
+                  <OwnerPanel />
+                </ProtectedRoute>
+              }
             />
-          <Route
-            path="/user-panel"
-            element={
-              <ProtectedRoute>
-                <UserPanel />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/merchant-panel"
-            element={
-              <ProtectedRoute>
-                <MerchantPanel />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+            <Route
+              path="/UserPanel"
+              element={
+                <ProtectedRoute>
+                  <UserPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/MerchantPanel"
+              element={
+                <ProtectedRoute>
+                  <MerchantPanel />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
         </Layout>
-        </Router>
+      </Router>
     </WalletProvider>
   );
 }
